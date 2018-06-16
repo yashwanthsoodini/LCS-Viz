@@ -34,20 +34,6 @@ Top-Down Approach Page:
 Recursive Approach Page:
   You are asked to enter two sequences. After submitting the sequences, the animation will start. The length of the LCS is printed on the left side of the screen.
 
-## Screenshots
-
-![](./screenshots/2.png)
-
-![](./screenshots/3.png)
-
-![](./screenshots/6.png)
-
-![](./screenshots/7.png)
-
-![](./screenshots/8.png)
-
-![](./screenshots/9.png)
-
 ## Built With
 
 * [d3.js](https://d3js.org/) - a JS library for manipulating documents based on data.
