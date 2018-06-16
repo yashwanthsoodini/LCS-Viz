@@ -1,0 +1,336 @@
+<html>
+<head>
+<title>
+    Longest Common Subsequence
+</title>
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+
+    <style>
+        .link {
+          fill: none;
+          stroke: #ccc;
+          stroke-width: 2px;
+        }
+        .text{
+            font-size: 14px;
+        }
+        #canvas{
+            overflow: auto;
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id=canvas></div>
+<script>
+    
+    var stringAInput = prompt('Enter First String','ABC');
+    var stringBInput = prompt('Enter Second String','ABCD');
+    
+    var max_length = Math.max(stringAInput.length,stringBInput.length);
+    
+    client_width = document.querySelector('#canvas').clientWidth*max_length*4
+    client_height = document.querySelector('#canvas').clientHeight*max_length/2
+    
+    var tree = d3.layout.tree()
+        .nodeSize([1000,])
+        .separation(function(a, b) { return a.children === b.children ? 1 : 1.2; })
+        .size([client_width, client_height]);
+
+    var diagonal = d3.svg.diagonal()
+        .source(function (d) {
+            return {x: d.source.x + 130, y: d.source.y+ 60};
+        })
+        .target(function (d) {
+            return {x: d.target.x +130, y: d.target.y};
+        })
+        .projection(function (s) {
+            return [s.x, s.y];
+        });
+    
+    
+    
+    var svg = d3.select("#canvas")
+        .attr("bgcolor", "#fff")
+        .append("svg")
+        .attr("width", client_width)
+        .attr("height", client_height)
+        .append("g");
+        
+
+    var drawTree = function(source,lcs){
+    
+    var lcs_g = svg.append('g');
+    
+    lcs_g.append('rect')
+        .attr("width", "110")
+        .attr("height", "30")
+        .attr("stroke", "black")
+        .attr("fill", "white")
+        .attr("x", "10")
+        .attr("y", "10");
+
+    lcs_g.append('text')
+        .attr("x", "20")
+        .attr("y", "25")
+        .attr("dy", ".25em")
+        .attr("class","text")
+        .text(function (d) { return "LCS  = " + lcs; });
+
+    var nodes = tree.nodes(source);
+    var links = tree.links(nodes);
+    var nodedata = svg.selectAll(".node")
+    .data(nodes, function(d){ return d.level;})
+    
+    nodes.forEach(function(d) { d.y = d.depth * 120; });
+    nodes.forEach(function(d) { d.x = (d.level.substring(1,d.level.length)-1)*((lengthA+lengthB)*d.padding_left +110) + 200; });
+        svg.selectAll('path.link').remove();
+    var link_paths = svg.selectAll("link")
+        .data(links);
+    var path = link_paths.enter()
+        .append("path")
+        .attr("class", "link")
+        .attr("d", diagonal);
+
+    var n = nodedata.enter().append('g')
+            .attr("class", "node");
+    
+    n.append('rect')
+        .attr("width", function(d) { return d.lenA*25 + d.lenB*25 + 100; })
+        .attr("height", function(d) { return 60; })
+        .attr("stroke", "black")
+        .attr("fill", "white")
+        .attr("x", function(d) { return d.x; })
+        .attr("y", function(d) { return d.y; });
+
+    n.append('text')
+        .attr("x", function (d) { return d.x + d.lenA*25/4 + d.lenB*25/4; })
+        .attr("y", function (d) { return d.y + 60*4/5 })
+        .attr("dy", ".25em")
+        .attr("class","text")
+        .attr("fill", function(d) { if(d.text == "Last characters are equal") {return "#0f0";} else { return "#F44336"; } })
+        .text(function (d) { return d.text });
+    
+
+
+    for(var i=0;i<source.lenA;i++)
+    {
+        n.append('rect')
+        .attr("width", 25)
+        .attr("height", 25)
+        .attr("stroke", "black")
+        .attr("fill", function(d) { if(d.strA[i+1] == undefined) {return d.color;} else { return "#fff"; } })
+        .attr("x", function(d) { return d.x + d.padding_left*(i+1) + 25/2; })
+        .attr("y", function(d) { return d.y + d.padding_top/2; })
+        .style("visibility", function (d) { if(d.strA[i] !=undefined) { return "visible"; } else {return "hidden";} });
+
+        n.append("text")
+        .attr("x", function (d) { return d.x + d.padding_left*(i+1) + 25/3 + 25/2; })
+        .attr("y", function (d) { return d.y + d.padding_top/2 + 20/2; })
+        .attr("dy", ".35em")
+        .text(function (d) { return d.strA[i] })
+        .style("visibility", function (d) { if(d.strA[i] !=undefined) { return "visible"; } else {return "hidden";} });
+    }
+
+    for(var i=0;i<source.lenB;i++)
+    {
+        n.append('rect')
+        .attr("width", 25)
+        .attr("height", 25)
+        .attr("stroke", "black")
+        .attr("fill", function(d) { if(d.strB[i+1] ==undefined) {return d.color;} else { return "#fff"; } })
+        .attr("x", function(d) { return d.x + d.padding_left*(i+1) + 25/2 + (d.lenA + 1)*d.padding_left ; })
+        .attr("y", function(d) { return d.y + d.padding_top/2; })
+        .style("visibility", function (d) { if(d.strB[i] !=undefined) { return "visible"; } else {return "hidden";} });
+
+        n.append("text")
+        .attr("x", function (d) { return d.x + d.padding_left*(i+1) + 25/2 + (d.lenA + 1)*d.padding_left + 25/3; })
+        .attr("y", function (d) { return d.y + d.padding_top/2 + 20/2; })
+        .attr("dy", ".35em")
+        .text(function (d) { return d.strB[i] })
+        .style("visibility", function (d) { if(d.strB[i] !=undefined) { return "visible"; } else {return "hidden";} });
+    }
+    nodedata.exit().remove();
+    };
+
+
+    function recur_naive_LCS(strA,strB,lA,lB,lev,parent_id,lcs)
+    {
+        if(maxlcs<lcs)
+        {
+            maxlcs = lcs;
+            drawTree(tree_data,maxlcs);
+        }
+        if(lA>0&&lB>0)
+        {
+            drawTree(tree_data,maxlcs);
+            if(strA[lA-1]==strB[lB-1])
+            {
+                var text = "";
+                if(strA[lA-2]==strB[lB-2])
+                {
+                    text = "Last characters are equal";
+                }
+                else
+                {
+                    text = "Last characters are not equal";
+                }
+                
+                if(lA-1>0&&lB-1>0)
+                {
+                    var child = {
+                        "level": (lev+1).toString() + (parent_id*2-1).toString(),
+                        "padding_top": 25,
+                        "padding_left": 25,
+                        "lenA": lA-1,
+                        "lenB": lB-1,
+                        "strA": strA.slice(0,lA-1),
+                        "strB": strB.slice(0,lB-1),
+                        "text": text,
+                        "color": "#ff0",
+                        "children": []
+                    };
+                    addChildNode(tree_data,lev+1,parent_id,child);
+                 }
+                setTimeout(function(){recur_naive_LCS(strA.slice(0,lA-1),strB.slice(0,lB-1),lA-1,lB-1,lev+1,parent_id*2-1,lcs+1);},2000);
+            }
+            else
+            {
+                var text1 = "";
+                if(strA[lA-2]==strB[lB-1])
+                {
+                    text1 = "Last characters are equal";
+                }
+                else
+                {
+                    text1 = "Last characters are not equal";
+                }
+
+                if(lA-1>0&&lB-1>0)
+                    {
+                        var child = {
+                        "level": (lev+1).toString() + (parent_id*2-1).toString(),
+                        "padding_top": 25,
+                        "padding_left": 25,
+                        "lenA": lA-1,
+                        "lenB": lB,
+                        "strA": strA.slice(0,lA-1),
+                        "strB": strB,
+                        "text": text1,
+                        "color": "#ff0",
+                        "children": []
+                    };
+                    addChildNode(tree_data,lev+1,parent_id,child);
+                    }
+                setTimeout(function(){recur_naive_LCS(strA.slice(0,lA-1),strB,lA-1,lB,lev+1,parent_id*2-1,lcs);}, 2000);
+                
+                var text2 = "";
+                if(strA[lA-1]==strB[lB-2])
+                {
+                    text2 = "Last characters are equal";
+                }
+                else
+                {
+                    text2 = "Last characters are not equal";
+                }
+                if(lA-1>0&&lB-1>0)
+                    {
+                        var child = {
+                        "level": (lev+1).toString() + (parent_id*2).toString(),
+                        "padding_top": 25,
+                        "padding_left": 25,
+                        "lenA": lA,
+                        "lenB": lB-1,
+                        "strA": strA,
+                        "strB": strB.slice(0,lB-1),
+                        "text": text2,
+                        "color": "#ff0",
+                        "children": []
+                    };
+                    addChildNode(tree_data,lev+1,parent_id,child);
+                    }
+                setTimeout(function(){recur_naive_LCS(strA,strB.slice(0,lB-1),lA,lB-1,lev+1,parent_id*2,lcs);}, 2000);
+            }
+        }
+    }
+    
+    function addChildNode(obj,lev,parent_id,node) {
+        var keys = Object.keys(obj);
+        var mode = 0;
+        for (var i = 0; i< keys.length; i++)
+        {
+            if(keys[i] == 'children')
+            {
+                mode = 1;
+            }
+        }
+        for (var key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                var val = obj[key];
+                if(key=='children'&&obj['level'][0]!=(lev-1).toString())
+                {
+                    for(var child in obj['children'])
+                    {
+                        addChildNode(obj['children'][child],lev,parent_id,node);
+                    }
+                }
+                else if(key=='children'&&obj['level'][0]==(lev-1).toString())
+                {
+                    if(obj['level'].substring(1,obj['level'].length)==parent_id)
+                    {
+                        obj['children'].push(node);
+                    }
+                }
+                else if(mode==0&&obj['level'][0]==(lev-1).toString())
+                {
+                    if(obj['level'].substring(1,obj['level'].length)==parent_id)
+                    {
+                        obj['children'] = [node];
+                    }
+                }
+            }
+        }
+    }
+    
+    var stringA = [];
+    var stringB = [];
+    var lengthA = stringAInput.length;
+    var lengthB = stringBInput.length;
+    for(var si = 0;si<stringAInput.length;si++)
+        {
+            stringA[si] = stringAInput.charAt(si);
+        }
+    
+    for(var si = 0;si<stringBInput.length;si++)
+        {
+            stringB[si] = stringBInput.charAt(si);
+        }
+    var texts = "";
+    if(stringA[lengthA-1]==stringB[lengthB-1])
+    {
+        texts = "Last characters are equal";
+    }
+    else
+    {
+        texts = "Last characters are not equal";
+    }
+
+    var tree_data = {
+            "level": '11',
+            "padding_top": 25,
+            "padding_left": 25,
+            "lenA": lengthA,
+            "lenB": lengthB,
+            "strA": stringA,
+            "strB": stringB,
+            "text": texts,
+            "color": "#ff0",
+            "children": []
+         };
+    
+    var maxlcs = 0;
+    recur_naive_LCS(stringA,stringB,lengthA,lengthB,1,1,0);
+</script>
+</body>
+</html>
